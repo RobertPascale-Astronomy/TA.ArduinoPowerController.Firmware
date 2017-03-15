@@ -2,15 +2,7 @@
 void SerialReceive();
 
 const int SerialBufferSize = 6;
-int relay0 = 0;
-int relay1 = 1;
-int relay2 = 2;
-int relay3 = 3;
-int relay4 = 4;
-int relay5 = 5;
-int relay6 = 6;
-int relay7 = 7;
-int relayArray [8] = {0, 1, 2, 3, 4, 5, 6, 7};
+int relayArray [8] = {2, 3, 4, 5, 6, 7, 8, 9};
 enum SerialState {start, wait, receive};
 enum SerialState currentState = start;
 char receiveBuffer [SerialBufferSize];
@@ -24,6 +16,7 @@ void setup()
 
   for (int i = 0; i < 8; i++)
   {
+    digitalWrite(relayArray[i],1);
     pinMode(relayArray[i], OUTPUT);
   }
 }
@@ -31,6 +24,15 @@ void setup()
 void loop()
 {
   SerialStateMachine();
+}
+
+int DigitalReadOutputPin(int pin)
+{
+  int bit = digitalPinToBitMask(pin);
+  int port = digitalPinToPort(pin);
+  if (port == NOT_A_PIN)
+    return LOW;
+  return (*portOutputRegister(port) & bit) ? HIGH : LOW;
 }
 
 char ReadOneChar()
@@ -131,10 +133,62 @@ void SerialReceive()
   }
 }
 
+void SendRelayStatus(int relay,int relayStatus)
+{
+  Serial.print(':');
+  Serial.print('R');
+  Serial.print(relay);
+  Serial.print(relayStatus);
+  Serial.print('#');
+}
+
+int GetRelayNumber()
+{
+  char relay = receiveBuffer[1];
+  if (relay <'0' || relay > '7')
+  {
+    Serial.println("Bad relay number");
+    return -1;
+  }
+  int relayNumber = relay - '0';
+  return relayNumber;
+}
+
+void DoReadCommand()
+{
+  if (bufferPosition != 2)
+  {
+    Serial.println("Wrong number of characters");
+    return;
+  }
+  int relay = GetRelayNumber();
+  if (relay <0) return;
+  int relayStatus = DigitalReadOutputPin(relayArray[relay]); 
+  SendRelayStatus(relay,relayStatus);
+  }
+
+void DoSetCommand()
+{
+  
+}
+
 void InterpretCommand()
 {
   Serial.print("Received ");
   Serial.println(receiveBuffer);
+  switch (receiveBuffer[0])
+  {
+    case 's':
+    case 'S':
+      DoSetCommand();
+      break;
+    case 'r': 
+    case 'R':
+      DoReadCommand();
+      break;
+    default:
+      Serial.println("Bad command");
+  }
 }
 
 
