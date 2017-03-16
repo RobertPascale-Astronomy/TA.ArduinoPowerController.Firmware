@@ -40,7 +40,7 @@ char ReadOneChar()
     if (Serial.available() == 0)
     return 0;
     char rxByte = Serial.read();
-    Serial.println(rxByte);
+    //Serial.println(rxByte);
     return rxByte;
 }
 
@@ -64,12 +64,11 @@ void testMode()
 
 void SerialStateMachine()
 {
-  if (currentState != lastState)
-  {
-    Serial.print("State ");
-    Serial.println(currentState);
-    
-  }
+  // if (currentState != lastState)
+  // {
+  //   Serial.print("State ");
+  //   Serial.println(currentState);
+  // }
 
   lastState = currentState;
   switch (currentState)
@@ -89,7 +88,7 @@ void SerialStart()
   ClearBuffer();
   Serial.begin(9600);
   currentState = wait;
-  Serial.println("SerialStart Initiated");
+  // Serial.println("SerialStart Initiated");
 }
 
 void ClearBuffer()
@@ -195,8 +194,8 @@ void DoSetCommand()
 
 void InterpretCommand()
 {
-  Serial.print("Received ");
-  Serial.println(receiveBuffer);
+  // Serial.print("Received ");
+  // Serial.println(receiveBuffer);
   switch (receiveBuffer[0])
   {
     case 's':
