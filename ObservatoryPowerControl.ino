@@ -31,8 +31,8 @@ int DigitalReadOutputPin(int pin)
   int bit = digitalPinToBitMask(pin);
   int port = digitalPinToPort(pin);
   if (port == NOT_A_PIN)
-    return LOW;
-  return (*portOutputRegister(port) & bit) ? HIGH : LOW;
+    return -1;
+  return (*portOutputRegister(port) & bit) ? 0 : 1;
 }
 
 char ReadOneChar()
@@ -136,7 +136,7 @@ void SerialReceive()
 void SendRelayStatus(int relay,int relayStatus)
 {
   Serial.print(':');
-  Serial.print('R');
+  Serial.print(receiveBuffer[0]);
   Serial.print(relay);
   Serial.print(relayStatus);
   Serial.print('#');
@@ -167,10 +167,31 @@ void DoReadCommand()
   SendRelayStatus(relay,relayStatus);
   }
 
+void WriteRelayPin(int relayPin, int relayValue)
+{
+  digitalWrite(relayPin, relayValue == 1 ? 0 : 1);
+}
+
 void DoSetCommand()
 {
-  
-}
+  if (bufferPosition != 3)
+  {
+    Serial.println("Wrong number of characters");
+    return;
+  }
+  int relay = GetRelayNumber();
+  if (relay <0) return;
+  int relayPin = relayArray[relay];
+  int onOffCommand = receiveBuffer[2];
+  if (onOffCommand <'0' || onOffCommand > '1')
+  {
+    Serial.println("Bad data");
+    return;
+  }
+  int relayValue = onOffCommand - '0';
+  WriteRelayPin(relayPin, relayValue);
+  SendRelayStatus(relay,relayValue);
+  }
 
 void InterpretCommand()
 {
