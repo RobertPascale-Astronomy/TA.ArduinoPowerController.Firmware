@@ -9,6 +9,22 @@ char receiveBuffer [SerialBufferSize];
 int bufferPosition = 0;
 enum SerialState lastState = start;
 
+// As per original sketch
+//const int digital_on = 0;
+//const int digital_off = 1;
+
+// to handle relays which are reversed, swap these around eg XC-4418 (https://www.jaycar.com.au/medias/sys_master/images/images/9403712995358/XC4418-dataSheetMain.pdf)
+const int digital_on = 1;
+const int digital_off = 0;
+
+
+// Command reference
+// 
+// :{S|R}{relaynum 0-7}{1=on, 0=off}#
+// eg. :S00# = Set Relay 0 to OFF
+// eg. :S01# = Set Relay 0 to ON
+// eg. :R0# = Read status of relay 1, returns 0=Off, 1=On
+
 
 void setup()
 {
@@ -16,7 +32,7 @@ void setup()
 
   for (int i = 0; i < 8; i++)
   {
-    digitalWrite(relayArray[i],1);
+    digitalWrite(relayArray[i],digital_off);  // switch off relays by default
     pinMode(relayArray[i], OUTPUT);
   }
 }
@@ -49,14 +65,14 @@ void testMode()
 {
   for (int i = 0; i < 8; i++) //turn relays on
   {
-    digitalWrite(relayArray[i], 0);
-    delay (1000);
+    WriteRelayPin(relayArray[i], digital_on);
+    delay (250);
   }
 
   for (int i = 0; i < 8; i++) //turn relays off
   {
-    digitalWrite(relayArray[i], 1);
-    delay (1000);
+    WriteRelayPin(relayArray[i], digital_off);
+    delay (250);
   }
 }
 
@@ -168,7 +184,7 @@ void DoReadCommand()
 
 void WriteRelayPin(int relayPin, int relayValue)
 {
-  digitalWrite(relayPin, relayValue == 1 ? 0 : 1);
+  digitalWrite(relayPin, relayValue == digital_on ? digital_on : digital_off);
 }
 
 void DoSetCommand()
@@ -187,7 +203,11 @@ void DoSetCommand()
     Serial.println("Bad data");
     return;
   }
-  int relayValue = onOffCommand - '0';
+
+  //int relayValue = onOffCommand - '0';
+  int relayValue;
+  if (onOffCommand == '0' ? relayValue = digital_off : relayValue = digital_on);
+  
   WriteRelayPin(relayPin, relayValue);
   SendRelayStatus(relay,relayValue);
   }
@@ -210,16 +230,4 @@ void InterpretCommand()
       Serial.println("Bad command");
   }
 }
-
-
   
-
-
-  
-
-
-
-
-
-
-
